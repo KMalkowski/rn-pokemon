@@ -1,74 +1,134 @@
-import { Image, StyleSheet, Platform } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
+import { StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { Image } from 'expo-image';
+import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import React from 'react';
+import { PokemonDetails } from '@/components/PokemonDetails';
 
-export default function HomeScreen() {
+export interface PokemonList {
+  count: number
+  next: string
+  previous: any
+  results: Pokemon[]
+}
+
+export interface Pokemon {
+  name: string
+  url: string
+}
+
+const fetchPokemonList = async (page: number): Promise<PokemonList> => {
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=20&offset=${page * 20}`);
+  if (!response.ok) throw new Error('Network response was not ok');
+  return response.json() as Promise<PokemonList>;
+};
+
+export default function TabTwoScreen() {
+  const [page, setPage] = useState(0);
+  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [selectedPokemon, setSelectedPokemon] = useState<Pokemon | null>(null);
+
+  const { data, isLoading } = useQuery({ queryKey: ['pokemons', page], queryFn: () => fetchPokemonList(page) })
+
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const backgroundColor = useThemeColor({ light: 'white', dark: 'black' }, 'background');
+
+  useEffect(() => {
+    if (data) {
+      setPokemons((prev) => [...prev, ...data.results]);
+    }
+  }, [data]);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
+    <SafeAreaView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <ThemedText type="title" style={styles.title}>Pokemons {isLoading ? (
+          <ActivityIndicator />
+        ) : null}</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+      <FlatList
+        onTouchStart={() => {
+          bottomSheetRef.current?.close()
+        }}
+        data={pokemons}
+        onEndReached={() => {
+          setPage(page + 1)
+        }}
+        renderItem={({ item }) => <ThemedView style={styles.stepContainer}>
+          <Image source={{ uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.url.split('/').findLast(part => part !== '')}.png` }} style={styles.pokemonImage} />
+          <ThemedView style={styles.description}>
+            <ThemedText type="subtitle">{item.name}</ThemedText>
+            <TouchableOpacity style={styles.detailsButton} onPress={() => {
+              setSelectedPokemon(item)
+              bottomSheetRef.current?.expand()
+            }}>
+              <ThemedText type="subtitle">Details</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        </ThemedView>}
+        keyExtractor={item => item.url}
+      />
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={['50%']}
+        enablePanDownToClose={true}
+        enableDynamicSizing={false}
+        index={-1}
+      >
+        <BottomSheetView style={[styles.contentContainer, { backgroundColor }]}>
+          <PokemonDetails selectedPokemon={selectedPokemon} />
+        </BottomSheetView>
+      </BottomSheet>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 36,
     alignItems: 'center',
-    gap: 8,
+  },
+  title: {
+    color: 'black',
+    fontSize: 24,
+    fontWeight: 'bold',
+    backgroundColor: 'white'
+  },
+  titleContainer: {
+    marginHorizontal: 8,
   },
   stepContainer: {
+    flexDirection: 'row',
     gap: 8,
     marginBottom: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    marginHorizontal: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  detailsButton: {
+    backgroundColor: 'gray',
+    padding: 8,
+    borderRadius: 4,
+    marginRight: 'auto',
+  },
+  pokemonImage: {
+    width: 100,
+    height: 100,
+  },
+  description: {
+    flex: 1,
+    gap: 8,
+    justifyContent: 'center',
   },
 });
