@@ -1,14 +1,15 @@
-import { StyleSheet, ActivityIndicator, TouchableOpacity, SafeAreaView, useColorScheme } from 'react-native';
+import { StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
 
 import { ThemedView } from "./ThemedView"
 import { ThemedText } from "./ThemedText"
 import { useQuery } from "@tanstack/react-query"
-import { useMMKVBoolean } from 'react-native-mmkv';
+import { useMMKVString } from 'react-native-mmkv';
 import { Pokemon } from '@/app/(tabs)';
 import { IconSymbol } from './ui/IconSymbol';
 import React from 'react';
 import { Image } from 'expo-image';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { favouritesKv } from '@/store/favourites';
 
 export interface PokemonDetails {
     id: number
@@ -51,53 +52,51 @@ export interface VersionGroup {
     url: string
 }
 
-const fetchPokemonDetails = async (url: string): Promise<PokemonDetails> => {
+export const fetchPokemonDetails = async (url: string): Promise<PokemonDetails> => {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Network response was not ok');
     return response.json() as Promise<PokemonDetails>;
 };
 
-export function PokemonDetails({ selectedPokemon }: { selectedPokemon: Pokemon | null }) {
+export function PokemonDetails({ selectedPokemon }: { selectedPokemon: Pokemon }) {
     const { data: pokemonDetails, isLoading: isPokemonDetailsLoading } = useQuery({ queryKey: ['pokemonDetails', selectedPokemon?.url], queryFn: () => fetchPokemonDetails(selectedPokemon?.url || '') })
-    const [isPokemonFavorite, setIsPokemonFavorite] = useMMKVBoolean(selectedPokemon?.name || '')
+    const [isPokemonFavorite, setIsPokemonFavorite] = useMMKVString(selectedPokemon?.url, favouritesKv)
 
     const colorScheme = useColorScheme();
 
     const backgroundColor = useThemeColor({ light: 'white', dark: 'black' }, 'background');
 
 
-    return (
-        <SafeAreaView>
-            <ThemedView style={styles.detailsContainer}>
-                <ThemedView style={[styles.detailsDescription, { backgroundColor }]}>
-                    <ThemedText type="subtitle">{selectedPokemon?.name}{isPokemonDetailsLoading ? (
-                        <ActivityIndicator />
-                    ) : null}</ThemedText>
-                    {selectedPokemon?.name ?
-                        <TouchableOpacity style={styles.favoriteButton} onPress={() => {
-                            setIsPokemonFavorite(!isPokemonFavorite)
-                        }}>
-                            {isPokemonFavorite ? (
-                                <>
-                                    <IconSymbol size={28} name="heart.fill" color={colorScheme === 'light' ? '#001a72' : '#f8f9ff'} />
-                                    <ThemedText type="subtitle">Your favorite</ThemedText>
-                                </>
-                            ) : (
-                                <>
-                                    <IconSymbol size={28} name="heart" color={colorScheme === 'light' ? '#001a72' : '#f8f9ff'} />
-                                    <ThemedText type="subtitle">Add to favorites</ThemedText>
-                                </>
-                            )}
-                        </TouchableOpacity> : null}
-                </ThemedView>
-                <Image source={{ uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon?.url.split('/').findLast(part => part !== '')}.png` }} style={styles.pokemonImage} />
+    return (<>
+        <ThemedView style={styles.detailsContainer}>
+            <ThemedView style={[styles.detailsDescription, { backgroundColor }]}>
+                <ThemedText type="subtitle">{selectedPokemon?.name}{isPokemonDetailsLoading ? (
+                    <ActivityIndicator />
+                ) : null}</ThemedText>
+                {selectedPokemon?.name ?
+                    <TouchableOpacity style={styles.favoriteButton} onPress={() => {
+                        setIsPokemonFavorite(isPokemonFavorite ? undefined : selectedPokemon?.url)
+                    }}>
+                        {isPokemonFavorite ? (
+                            <>
+                                <IconSymbol size={28} name="heart.fill" color={colorScheme === 'light' ? '#001a72' : '#f8f9ff'} />
+                                <ThemedText type="subtitle">Your favorite</ThemedText>
+                            </>
+                        ) : (
+                            <>
+                                <IconSymbol size={28} name="heart" color={colorScheme === 'light' ? '#001a72' : '#f8f9ff'} />
+                                <ThemedText type="subtitle">Add to favorites</ThemedText>
+                            </>
+                        )}
+                    </TouchableOpacity> : null}
             </ThemedView>
-            <ThemedView style={styles.detailsContainer}>
-                {pokemonDetails?.is_battle_only ? <ThemedText type="subtitle">Battle only!</ThemedText> : null}
-                <ThemedText type="subtitle">{pokemonDetails?.types.map(type => type.type.name).join(', ')}</ThemedText>
-            </ThemedView>
-        </SafeAreaView>
-    )
+            <Image source={{ uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon?.url.split('/').findLast(part => part !== '')}.png` }} style={styles.pokemonImage} />
+        </ThemedView>
+        <ThemedView style={styles.detailsContainer}>
+            {pokemonDetails?.is_battle_only ? <ThemedText type="subtitle">Battle only!</ThemedText> : null}
+            <ThemedText type="subtitle">{pokemonDetails?.types.map(type => type.type.name).join(', ')}</ThemedText>
+        </ThemedView>
+    </>)
 }
 
 const styles = StyleSheet.create({

@@ -82,7 +82,9 @@ export default function TabTwoScreen() {
         index={-1}
       >
         <BottomSheetView style={[styles.contentContainer, { backgroundColor }]}>
-          <PokemonDetails selectedPokemon={selectedPokemon} />
+          <SafeAreaView>
+            {selectedPokemon && <PokemonDetails selectedPokemon={selectedPokemon} />}
+          </SafeAreaView>
         </BottomSheetView>
       </BottomSheet>
     </SafeAreaView>
