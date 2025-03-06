@@ -16,7 +16,7 @@ import { Image } from "expo-image";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { favouritesKv } from "@/store/favourites";
 
-export interface PokemonDetails {
+export type PokemonDetails = {
   id: number;
   name: string;
   order: number;
@@ -29,9 +29,9 @@ export interface PokemonDetails {
   sprites: Sprites;
   types: Type[];
   version_group: VersionGroup;
-}
+};
 
-export interface Sprites {
+export type Sprites = {
   back_default: string;
   back_female: any;
   back_shiny: string;
@@ -40,22 +40,22 @@ export interface Sprites {
   front_female: any;
   front_shiny: string;
   front_shiny_female: any;
-}
+};
 
-export interface Type {
+export type Type = {
   slot: number;
   type: Type2;
-}
+};
 
-export interface Type2 {
+export type Type2 = {
   name: string;
   url: string;
-}
+};
 
-export interface VersionGroup {
+export type VersionGroup = {
   name: string;
   url: string;
-}
+};
 
 export const fetchPokemonDetails = async (
   url: string

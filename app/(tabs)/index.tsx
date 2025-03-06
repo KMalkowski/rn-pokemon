@@ -17,17 +17,17 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
 import { PokemonDetails } from "@/components/PokemonDetails";
 
-export interface PokemonList {
+export type PokemonList = {
   count: number;
   next: string;
   previous: any;
   results: Pokemon[];
-}
+};
 
-export interface Pokemon {
+export type Pokemon = {
   name: string;
   url: string;
-}
+};
 
 const fetchPokemonList = async (page: number): Promise<PokemonList> => {
   const response = await fetch(
