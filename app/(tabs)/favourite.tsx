@@ -9,7 +9,9 @@ import { useState } from "react";
 import { useColorScheme } from "react-native";
 
 export default function FavouriteScreen() {
-  const [favouritePokemons, setFavouritePokemons] = useState<string[]>([]);
+  const [favouritePokemons, setFavouritePokemons] = useState<string[]>(
+    favouritesKv.getAllKeys()
+  );
   const colorScheme = useColorScheme();
 
   useMMKVListener(() => {
