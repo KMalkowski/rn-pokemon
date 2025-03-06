@@ -6,32 +6,51 @@ import { favouritesKv } from "@/store/favourites";
 import { FavouritePokemonItem } from "@/components/FavouritePokemonItem";
 import { useMMKVListener } from "react-native-mmkv";
 import { useState } from "react";
+import { useColorScheme } from "react-native";
 
 export default function FavouriteScreen() {
   const [favouritePokemons, setFavouritePokemons] = useState<string[]>([]);
+  const colorScheme = useColorScheme();
 
   useMMKVListener(() => {
     setFavouritePokemons(favouritesKv.getAllKeys());
   }, favouritesKv);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#f5f5f5" },
+      ]}
+    >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title" style={styles.title}>
-          Favourite
+          Favourite Pokémon
         </ThemedText>
       </ThemedView>
-      <ThemedView style={styles.favouriteContainer}>
+      <ThemedView
+        style={[
+          styles.favouriteContainer,
+          { backgroundColor: colorScheme === "dark" ? "#1a1a1a" : "#f5f5f5" },
+        ]}
+      >
         {favouritePokemons.length > 0 ? (
           <FlatList
             data={favouritePokemons}
             renderItem={({ item }) => (
               <FavouritePokemonItem pokemonUrl={item} />
             )}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
           />
         ) : (
           <ThemedView style={styles.emptyContainer}>
-            <ThemedText type="subtitle">No favourite pokemons yet!</ThemedText>
+            <ThemedText type="subtitle" style={styles.emptyText}>
+              No favourite Pokémon yet!
+            </ThemedText>
+            <ThemedText style={styles.emptySubtext}>
+              Add some Pokémon to your favourites to see them here
+            </ThemedText>
           </ThemedView>
         )}
       </ThemedView>
@@ -42,34 +61,36 @@ export default function FavouriteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
   },
   titleContainer: {
-    marginHorizontal: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   favouriteContainer: {
-    display: "flex",
-    margin: 8,
-    gap: 8,
-    backgroundColor: "white",
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  listContainer: {
+    padding: 16,
+    gap: 12,
   },
   emptyContainer: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-    height: "100%",
+    paddingHorizontal: 32,
   },
   title: {
-    color: "black",
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    backgroundColor: "white",
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    textAlign: "center",
+    opacity: 0.7,
   },
 });
