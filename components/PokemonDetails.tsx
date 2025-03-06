@@ -66,18 +66,18 @@ export const fetchPokemonDetails = async (
 };
 
 export function PokemonDetails({
-  selectedPokemon,
+  selectedPokemonUrl,
 }: {
-  selectedPokemon: Pokemon;
+  selectedPokemonUrl: string;
 }) {
   const { data: pokemonDetails, isLoading: isPokemonDetailsLoading } = useQuery(
     {
-      queryKey: ["pokemonDetails", selectedPokemon?.url],
-      queryFn: () => fetchPokemonDetails(selectedPokemon?.url || ""),
+      queryKey: ["pokemonDetails", selectedPokemonUrl],
+      queryFn: () => fetchPokemonDetails(selectedPokemonUrl),
     }
   );
   const [isPokemonFavorite, setIsPokemonFavorite] = useMMKVString(
-    selectedPokemon?.url,
+    selectedPokemonUrl,
     favouritesKv
   );
 
@@ -105,17 +105,17 @@ export function PokemonDetails({
             type="subtitle"
             style={[styles.pokemonName, { color: textColor }]}
           >
-            {selectedPokemon?.name}
+            {pokemonDetails?.name}
             {isPokemonDetailsLoading ? (
               <ActivityIndicator style={styles.loader} />
             ) : null}
           </ThemedText>
-          {selectedPokemon?.name ? (
+          {pokemonDetails?.name ? (
             <TouchableOpacity
               style={[styles.favoriteButton, { backgroundColor: buttonColor }]}
               onPress={() => {
                 setIsPokemonFavorite(
-                  isPokemonFavorite ? undefined : selectedPokemon?.url
+                  isPokemonFavorite ? undefined : selectedPokemonUrl
                 );
               }}
             >
@@ -139,7 +139,7 @@ export function PokemonDetails({
         </ThemedView>
         <Image
           source={{
-            uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon?.url
+            uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemonUrl
               .split("/")
               .findLast((part) => part !== "")}.png`,
           }}

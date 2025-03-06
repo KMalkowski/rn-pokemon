@@ -148,7 +148,7 @@ export default function PokemonListScreen() {
         <BottomSheetView style={[styles.contentContainer, { backgroundColor }]}>
           <SafeAreaView>
             {selectedPokemon && (
-              <PokemonDetails selectedPokemon={selectedPokemon} />
+              <PokemonDetails selectedPokemonUrl={selectedPokemon.url} />
             )}
           </SafeAreaView>
         </BottomSheetView>

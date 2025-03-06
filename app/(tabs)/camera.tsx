@@ -49,7 +49,7 @@ export default function App() {
   const frameProcessor = useFrameProcessor((frame) => {
     "worklet";
 
-    runAtTargetFps(120, () => {
+    runAtTargetFps(60, () => {
       "worklet";
       const detectedFaces = detectFaces(frame);
       setFacesInJS(detectedFaces);

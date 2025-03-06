@@ -42,7 +42,10 @@ export default function FavouriteScreen() {
             renderItem={({ item }) => (
               <FavouritePokemonItem pokemonUrl={item} />
             )}
-            contentContainerStyle={styles.listContainer}
+            contentContainerStyle={[
+              styles.listContainer,
+              { paddingBottom: 100 },
+            ]}
             showsVerticalScrollIndicator={false}
           />
         ) : (
