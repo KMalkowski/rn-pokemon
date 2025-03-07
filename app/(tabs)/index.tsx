@@ -2,7 +2,6 @@ import {
   StyleSheet,
   ActivityIndicator,
   FlatList,
-  TouchableOpacity,
   SafeAreaView,
   useColorScheme,
   RefreshControl,
@@ -16,6 +15,7 @@ import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
 import { PokemonDetails } from "@/components/PokemonDetails";
+import { PokemonListItem } from "@/components/PokemonListItem";
 
 export type PokemonList = {
   count: number;
@@ -52,10 +52,6 @@ export default function PokemonListScreen() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const backgroundColor = useThemeColor(
     { light: "white", dark: "black" },
-    "background"
-  );
-  const buttonColor = useThemeColor(
-    { light: "#e6efff", dark: "#1a1a1a" },
     "background"
   );
 
@@ -106,33 +102,12 @@ export default function PokemonListScreen() {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <ThemedView style={[styles.stepContainer, { backgroundColor }]}>
-              <ThemedView style={styles.description}>
-                <ThemedText type="subtitle" style={styles.pokemonName}>
-                  {item.name}
-                </ThemedText>
-                <TouchableOpacity
-                  style={[
-                    styles.detailsButton,
-                    { backgroundColor: buttonColor },
-                  ]}
-                  onPress={() => {
-                    setSelectedPokemon(item);
-                    bottomSheetRef.current?.expand();
-                  }}
-                >
-                  <ThemedText type="subtitle">Details</ThemedText>
-                </TouchableOpacity>
-              </ThemedView>
-              <Image
-                source={{
-                  uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.url
-                    .split("/")
-                    .findLast((part) => part !== "")}.png`,
-                }}
-                style={styles.pokemonImage}
-              />
-            </ThemedView>
+            <PokemonListItem
+              key={item.url}
+              pokemon={item}
+              setSelectedPokemon={setSelectedPokemon}
+              bottomSheetRef={bottomSheetRef}
+            />
           )}
           keyExtractor={(item) => item.url}
         />
@@ -161,11 +136,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  contentContainer: {
-    flex: 1,
-    padding: 36,
-    alignItems: "center",
-  },
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -174,36 +144,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
+  contentContainer: {
+    flex: 1,
+    padding: 36,
+    alignItems: "center",
+  },
   listWrapper: {
     flex: 1,
   },
   listContainer: {
     padding: 16,
     gap: 12,
-  },
-  stepContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-  },
-  detailsButton: {
-    padding: 8,
-    borderRadius: 8,
-    marginTop: 8,
-    alignSelf: "flex-start",
-  },
-  pokemonImage: {
-    width: 80,
-    height: 80,
-  },
-  description: {
-    flex: 1,
-    gap: 4,
-  },
-  pokemonName: {
-    fontSize: 18,
-    textTransform: "capitalize",
   },
 });
