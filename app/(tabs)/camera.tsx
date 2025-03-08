@@ -1,75 +1,117 @@
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  runAtTargetFps,
+  useCameraDevice,
+  useFrameProcessor,
+} from "react-native-vision-camera";
+import {
+  useFaceDetector,
+  FaceDetectionOptions,
+  Face,
+} from "react-native-vision-camera-face-detector";
+import { Worklets } from "react-native-worklets-core";
+import { ThemedView } from "@/components/ThemedView";
+import { Image } from "expo-image";
+import { favouritesKv } from "@/store/favourites";
+import { useMMKVListener } from "react-native-mmkv";
 
-import { Image, StyleSheet, Platform } from 'react-native';
+export default function App() {
+  const [favouritePokemons, setFavouritePokemons] = useState<string[]>(
+    favouritesKv.getAllKeys()
+  );
+  useMMKVListener(() => {
+    setFavouritePokemons(favouritesKv.getAllKeys());
+  }, favouritesKv);
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+  const [facesState, setFacesState] = useState<Face[]>([]);
 
-export default function CameraScreen() {
+  const { width, height } = useWindowDimensions();
+  const faceDetectionOptions = useRef<FaceDetectionOptions>({
+    autoMode: true,
+    windowWidth: width,
+    windowHeight: height,
+  }).current;
+
+  const device = useCameraDevice("front");
+  const { detectFaces } = useFaceDetector(faceDetectionOptions);
+
+  useEffect(() => {
+    (async () => {
+      const status = await Camera.requestCameraPermission();
+      console.log({ status });
+    })();
+  }, [device]);
+
+  const setFacesInJS = Worklets.createRunOnJS(setFacesState);
+
+  const frameProcessor = useFrameProcessor((frame) => {
+    "worklet";
+
+    runAtTargetFps(60, () => {
+      "worklet";
+      const detectedFaces = detectFaces(frame);
+      setFacesInJS(detectedFaces);
+    });
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={{ flex: 1 }}>
+      {!!device ? (
+        <Camera
+          style={StyleSheet.absoluteFill}
+          device={device}
+          isActive={true}
+          frameProcessor={frameProcessor}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      ) : (
+        <Text>No Device</Text>
+      )}
+      {facesState[0] && (
+        <ThemedView
+          style={{
+            position: "absolute",
+            backgroundColor: "transparent",
+            transform: [
+              { translateX: facesState[0].bounds.x },
+              { translateY: facesState[0].bounds.y },
+            ],
+            width: facesState[0].bounds.width,
+            height: facesState[0].bounds.height,
+            flexDirection: "row",
+            flexWrap: "wrap",
+          }}
+        >
+          {favouritePokemons.map((pokemon) => (
+            <View
+              style={{
+                width: facesState[0].bounds.width / favouritePokemons.length,
+                height: facesState[0].bounds.height / favouritePokemons.length,
+              }}
+              key={pokemon}
+            >
+              <Image
+                source={{
+                  uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon
+                    .split("/")
+                    .findLast((part) => part !== "")}.png`,
+                }}
+                style={styles.pokemonImage}
+                contentFit="contain"
+              />
+            </View>
+          ))}
+        </ThemedView>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  pokemonImage: {
+    width: 120,
+    height: 120,
+    position: "absolute",
   },
 });

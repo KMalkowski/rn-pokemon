@@ -1,3 +1,5 @@
-import { MMKV } from 'react-native-mmkv';
+import { MMKV } from "react-native-mmkv";
 
-export const favouritesKv = new MMKV();
+export const favouritesKv = new MMKV({
+  id: "favourites",
+});
