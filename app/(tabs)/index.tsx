@@ -10,7 +10,6 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Image } from "expo-image";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
@@ -91,15 +90,18 @@ export default function PokemonListScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
-              onRefresh={async () => {
-                await queryClient.clear();
+              onRefresh={() => {
+                queryClient.clear();
                 setPokemons([]);
                 setPage(0);
                 refetch();
               }}
             />
           }
-          contentContainerStyle={styles.listContainer}
+          contentContainerStyle={[
+            styles.listContainer,
+            { paddingBottom: 100 },
+          ]}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <PokemonListItem
