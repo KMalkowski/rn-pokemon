@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
-import MapView, { Marker } from "react-native-maps";
+import React, { memo, useMemo, useRef, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -8,7 +7,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Location from "expo-location";
 import { LocationObjectCoords } from "expo-location";
 import { ThemedText } from "@/components/ThemedText";
 import { mapMarkersKv } from "@/store/mapMarkers";
@@ -20,6 +18,7 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { Image } from "expo-image";
 import { ThemedView } from "@/components/ThemedView";
 import { PokemonDetails } from "@/components/PokemonDetails";
+import { PokemonMap } from "@/components/PokemonMap";
 
 type MapMarker = {
   latitude: number;
@@ -28,27 +27,12 @@ type MapMarker = {
 };
 
 export default function MapScreen() {
-  const [location, setLocation] = useState<LocationObjectCoords | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [clickedLocation, setClickedLocation] =
     useState<LocationObjectCoords | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPokemonUrl, setSelectedPokemonUrl] = useState<string | null>(
     null
   );
-
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location.coords);
-    })();
-  }, []);
 
   const [favouritePokemons, setFavouritePokemons] = useState<string[]>(
     favouritesKv.getAllKeys()
@@ -65,6 +49,15 @@ export default function MapScreen() {
     return markers;
   });
 
+  const availableFavouritePokemons = useMemo(
+    () =>
+      favouritePokemons.filter(
+        (pokemon) =>
+          !mapMarkers?.some((marker) => marker.pokemonUrl === pokemon)
+      ),
+    [favouritePokemons, mapMarkers]
+  );
+
   useMMKVListener(() => {
     setFavouritePokemons(favouritesKv.getAllKeys());
   }, favouritesKv);
@@ -80,10 +73,6 @@ export default function MapScreen() {
     setMapMarkers(markers);
   }, mapMarkersKv);
 
-  const availableFavouritePokemons = favouritePokemons.filter(
-    (pokemon) => !mapMarkers.some((marker) => marker.pokemonUrl === pokemon)
-  );
-
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const backgroundColor = useThemeColor(
@@ -91,71 +80,15 @@ export default function MapScreen() {
     "background"
   );
 
-  if (!location) {
-    return <ThemedText>Loading...</ThemedText>;
-  }
-
-  if (errorMsg) {
-    return <ThemedText>{errorMsg}</ThemedText>;
-  }
-
-  const latitudeDelta = 0.018 / 10;
-  const longitudeDelta =
-    0.018 / (10 * Math.cos((location.latitude * Math.PI) / 180));
-
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        region={{
-          latitude: location.latitude,
-          longitude: location.longitude,
-          latitudeDelta,
-          longitudeDelta,
-        }}
-        showsUserLocation={true}
-        onLongPress={(e) => {
-          const { coordinate } = e.nativeEvent;
-          setClickedLocation({
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude,
-            altitude: 0,
-            accuracy: 0,
-            altitudeAccuracy: 0,
-            heading: 0,
-            speed: 0,
-          });
-
-          bottomSheetRef.current?.expand();
-        }}
-        onTouchStart={() => {
-          bottomSheetRef.current?.close();
-          setModalVisible(false);
-        }}
-      >
-        {mapMarkers.map((marker) => (
-          <Marker
-            key={marker.pokemonUrl}
-            coordinate={{
-              latitude: marker.latitude,
-              longitude: marker.longitude,
-            }}
-            onPress={() => {
-              setSelectedPokemonUrl(marker.pokemonUrl);
-              setModalVisible(true);
-            }}
-          >
-            <Image
-              source={{
-                uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${marker.pokemonUrl
-                  .split("/")
-                  .findLast((part) => part !== "")}.png`,
-              }}
-              style={{ width: 40, height: 40 }}
-            />
-          </Marker>
-        ))}
-      </MapView>
+      <PokemonMap
+        setSelectedPokemonUrl={setSelectedPokemonUrl}
+        setModalVisible={setModalVisible}
+        mapMarkers={mapMarkers}
+        setClickedLocation={setClickedLocation}
+        bottomSheetRef={bottomSheetRef}
+      />
 
       <Modal
         animationType="slide"
@@ -259,10 +192,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 36,
     alignItems: "center",
-  },
-  map: {
-    width: "100%",
-    height: "100%",
   },
   pokemonImage: {
     width: 100,
