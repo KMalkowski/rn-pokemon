@@ -1,53 +1,56 @@
 {
-  "expo": {
-    "name": "pokemon",
-    "slug": "pokemon",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "pokemon",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.pokemon",
-      "infoPlist": {
-        "NSCameraUsageDescription": "This app needs access to your camera to scan your morda."
-      }
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "permissions": ["android.permission.CAMERA", "android.permission.CAMERA"],
-      "package": "com.anonymous.pokemon"
-    },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+    "expo": {
+        "name": "pokemon",
+        "slug": "pokemon",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "scheme": "pokemon",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.anonymous.pokemon",
+            "infoPlist": {
+                "NSCameraUsageDescription": "This app needs access to your camera to scan your morda."
+            }
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "permissions": [
+                "android.permission.CAMERA",
+                "android.permission.CAMERA"
+            ],
+            "package": "com.anonymous.pokemon"
+        },
+        "web": {
+            "bundler": "metro",
+            "output": "static",
+            "favicon": "./assets/images/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-splash-screen",
+                {
+                    "image": "./assets/images/splash-icon.png",
+                    "imageWidth": 200,
+                    "resizeMode": "contain",
+                    "backgroundColor": "#ffffff"
+                }
+            ],
+            [
+                "react-native-vision-camera",
+                {
+                    "cameraPermissionText": "This app needs access to your camera to scan your morda."
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": true
         }
-      ],
-      [
-        "react-native-vision-camera",
-        {
-          "cameraPermissionText": "This app needs access to your camera to scan your morda."
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
     }
-  }
 }
